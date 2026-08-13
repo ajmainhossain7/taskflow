@@ -2,7 +2,7 @@
   "/_not-found/page": "app/_not-found/page.js",
   "/health/page": "app/health/page.js",
   "/app/page": "app/app/page.js",
+  "/(marketing)/contact/page": "app/(marketing)/contact/page.js",
   "/(marketing)/about/page": "app/(marketing)/about/page.js",
-  "/(marketing)/page": "app/(marketing)/page.js",
-  "/(marketing)/contact/page": "app/(marketing)/contact/page.js"
+  "/(marketing)/page": "app/(marketing)/page.js"
 }

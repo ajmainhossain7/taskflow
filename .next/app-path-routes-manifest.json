@@ -2,7 +2,7 @@
   "/_not-found/page": "/_not-found",
   "/health/page": "/health",
   "/app/page": "/app",
+  "/(marketing)/contact/page": "/contact",
   "/(marketing)/about/page": "/about",
-  "/(marketing)/page": "/",
-  "/(marketing)/contact/page": "/contact"
+  "/(marketing)/page": "/"
 }
