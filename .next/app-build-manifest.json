@@ -15,19 +15,20 @@
       "static/css/1317f16bde8014b4.css",
       "static/chunks/app/layout-a0b0c223abcd0305.js"
     ],
-    "/health/page": [
-      "static/chunks/webpack-05921483b337c285.js",
-      "static/chunks/4bd1b696-c023c6e3521b1417.js",
-      "static/chunks/255-87552e6e05b8e3aa.js",
-      "static/chunks/main-app-f3a33d2757522cd5.js",
-      "static/chunks/app/health/page-90f3a77889c94fae.js"
-    ],
     "/app/page": [
       "static/chunks/webpack-05921483b337c285.js",
       "static/chunks/4bd1b696-c023c6e3521b1417.js",
       "static/chunks/255-87552e6e05b8e3aa.js",
       "static/chunks/main-app-f3a33d2757522cd5.js",
-      "static/chunks/app/app/page-90f3a77889c94fae.js"
+      "static/chunks/619-ba102abea3e3d0e4.js",
+      "static/chunks/app/app/page-221b3b95775049dc.js"
+    ],
+    "/health/page": [
+      "static/chunks/webpack-05921483b337c285.js",
+      "static/chunks/4bd1b696-c023c6e3521b1417.js",
+      "static/chunks/255-87552e6e05b8e3aa.js",
+      "static/chunks/main-app-f3a33d2757522cd5.js",
+      "static/chunks/app/health/page-2ffbeab9eacaecb2.js"
     ],
     "/(marketing)/layout": [
       "static/chunks/webpack-05921483b337c285.js",
@@ -49,7 +50,7 @@
       "static/chunks/4bd1b696-c023c6e3521b1417.js",
       "static/chunks/255-87552e6e05b8e3aa.js",
       "static/chunks/main-app-f3a33d2757522cd5.js",
-      "static/chunks/app/(marketing)/about/page-90f3a77889c94fae.js"
+      "static/chunks/app/(marketing)/about/page-2ffbeab9eacaecb2.js"
     ],
     "/(marketing)/page": [
       "static/chunks/webpack-05921483b337c285.js",
