@@ -1,8 +1,8 @@
-// File: G:\taskflow\src\app\page.jsx
-import * as entry from '../../../src/app/page.js'
+// File: G:\taskflow\src\app\(marketing)\about\page.jsx
+import * as entry from '../../../../../src/app/(marketing)/about/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
-type TEntry = typeof import('../../../src/app/page.js')
+type TEntry = typeof import('../../../../../src/app/(marketing)/about/page.js')
 
 type SegmentParams<T extends Object = any> = T extends Record<string, any>
   ? { [K in keyof T]: T[K] extends string ? string | string[] | undefined : never }
