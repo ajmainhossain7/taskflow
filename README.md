@@ -1,20 +1,21 @@
-# ✅ Modern Todo Application
+# 🌌 TaskFlow — Digital Productivity Suite
 
-A clean, accessible, responsive, and fully functional Todo application built using **React 19**, **Vite**, **JavaScript**, and **Tailwind CSS v4**.
+TaskFlow is a premium, high-performance digital productivity suite built with **Next.js 15**, **React 19**, and **Tailwind CSS v4**. It features a modern dark-mode glassmorphism interface aligned with the Google Stitch design system.
 
 ---
 
 ## 🌟 Key Features
 
-- **➕ Add Tasks:** Type a task and click **Add** or press **Enter**. Empty or whitespace-only inputs are automatically blocked.
-- **✔️ Toggle Completion:** Click the check circle to toggle task status between active and completed.
-- **🗑️ Delete Tasks:** Remove individual tasks with a single click (accessible via mouse hover or keyboard navigation).
-- **🔍 Task Filtering:** Easily filter your view by **All**, **Active**, or **Completed** tasks.
-- **🧹 Clear Completed:** Remove all completed tasks at once with a single click.
-- **💾 Automatic LocalStorage Persistence:** Tasks and completion states automatically sync to your browser's local storage and persist across page reloads.
-- **📊 Real-time Task Statistics:** Track remaining active tasks and completion progress.
-- **♿ Accessibility (a11y):** Built with WAI-ARIA roles (`tablist`, `tab`, `status`), dynamic screen reader announcements (`aria-live`), and full keyboard navigation support (`focus-visible`).
-- **📱 Responsive & Premium Design:** Styled with a modern glassmorphism aesthetic, subtle shadows, smooth transitions, and custom Google Fonts (`Inter`).
+- **⚡ Productivity Workspace (`/app`)**:
+  - **Quick Add**: Instantly add new tasks with keyboard shortcuts and validation rules.
+  - **Status Management**: Track progress with a thin glowing Electric Blue progress bar and circular status checkboxes.
+  - **Task Actions**: Hover to delete tasks or clear all completed items in one click.
+  - **Local Persistence**: Tasks are synchronized client-side using an SSR-safe `localStorage` state hook.
+  - **Workspace Filters**: Dynamically switch task views between **All**, **Active**, and **Completed**.
+- **🌐 Public Landing & About Pages (`/`, `/about`, `/contact`)**:
+  - Sleek marketing pages featuring responsive dark themes, bento grid layouts, location visualizations, and interactive FAQ widgets.
+- **🏥 System Diagnostics (`/health`)**:
+  - Dynamic Server Component rendering live time metrics (`worldtimeapi.org`) and GitHub server connectivity indicators.
 
 ---
 
@@ -22,38 +23,39 @@ A clean, accessible, responsive, and fully functional Todo application built usi
 
 | Technology | Purpose |
 | --- | --- |
-| **React 19** | UI Library (Functional Components & Custom Hooks) |
-| **Vite 8** | Next Generation Frontend Tooling & Dev Server |
-| **Tailwind CSS v4** | Modern Utility-First CSS Framework |
-| **JavaScript (ES6+)** | Core Application Logic |
-| **HTML5 & Web Storage** | Semantic Layout & Browser LocalStorage |
+| **Next.js 15 (App Router)** | Framework with Server & Client Component separation |
+| **React 19** | Component hierarchy & state hooks |
+| **Tailwind CSS v4** | Modern utility-first styles with `@theme` configurations |
+| **PostCSS** | CSS compiler processing Tailwind v4 stylesheets |
+| **JavaScript** | Application logic & local storage synchronization |
 
 ---
 
 ## 📁 Project Structure
 
 ```
-todo-app/
+taskflow/
 ├── public/
 ├── src/
+│   ├── app/
+│   │   ├── (marketing)/      # Shared TopNav/Footer layout group
+│   │   │   ├── about/        # /about route page
+│   │   │   ├── contact/      # /contact route page
+│   │   │   ├── layout.jsx    # Marketing route layout
+│   │   │   └── page.jsx      # Home route landing page
+│   │   ├── app/              # /app route page (Todo workspace)
+│   │   ├── health/           # /health route page (Server diagnostics)
+│   │   ├── global.css        # Stylesheet containing Tailwind & theme design tokens
+│   │   └── layout.jsx        # Root HTML layout loading CSS & Geist fonts
 │   ├── components/
-│   │   ├── EmptyState.jsx    # Context-aware messages when no tasks exist
-│   │   ├── FilterBar.jsx     # Tab switcher (All / Active / Completed)
-│   │   ├── Header.jsx        # Application header & title
-│   │   ├── StatsBar.jsx      # Task counters & "Clear Completed" button
-│   │   ├── TodoInput.jsx     # Input form with validation & submission guards
-│   │   ├── TodoItem.jsx      # Individual task row with toggle and delete actions
-│   │   └── TodoList.jsx      # Maps filtered tasks or displays empty state
-│   ├── hooks/
-│   │   └── useTodos.js       # Custom hook managing state & localStorage sync
-│   ├── App.jsx               # Root layout & centralized state management
-│   ├── main.jsx              # Application entry point
-│   └── index.css            # Tailwind directives & Inter Google Font
-├── .gitattributes            # Line ending normalization across OS environments
-├── index.html                # Main HTML document
-├── package.json              # Project dependencies & scripts
-├── README.md                 # Project documentation
-└── vite.config.js            # Vite configuration with Tailwind plugin
+│   │   ├── Navbar.jsx        # Responsive top navbar with active route highlights
+│   │   └── Footer.jsx        # Shared marketing footer
+│   └── hooks/
+│       └── useTodos.js       # SSR-safe localStorage React state hook
+├── postcss.config.mjs        # Tailwind v4 compilation configuration
+├── next.config.js            # Next.js compiler settings
+├── package.json              # Project dependencies & script triggers
+└── README.md                 # Project documentation
 ```
 
 ---
@@ -64,14 +66,14 @@ Follow these steps to run the application locally on your machine:
 
 ### Prerequisites
 
-Ensure you have **Node.js** (v18 or higher recommended) installed on your system.
+Ensure you have **Node.js** (v18.17.0 or higher recommended) installed.
 
 ### Installation & Execution
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/ajmainhossain7/todo-app.git
-   cd todo-app
+   git clone https://github.com/ajmainhossain7/taskflow.git
+   cd taskflow
    ```
 
 2. **Install dependencies:**
@@ -85,16 +87,16 @@ Ensure you have **Node.js** (v18 or higher recommended) installed on your system
    ```
 
 4. **Open in Browser:**
-   Navigate to `http://localhost:5173/` in your browser.
+   Navigate to `http://localhost:3000/` (or the port specified in terminal logs).
 
 ---
 
 ## 📜 Available Scripts
 
-- `npm run dev` — Starts the Vite development server.
+- `npm run dev` — Starts the Next.js development server.
 - `npm run build` — Builds the application for production.
-- `npm run preview` — Locally previews the production build.
-- `npm run lint` — Runs Oxlint for static code analysis.
+- `npm run start` — Runs the compiled Next.js production server.
+- `npm run lint` — Runs static code analysis.
 
 ---
 
