@@ -101,7 +101,7 @@ export default function ChatPanel({
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (input.trim() && !isLoading) {
+      if ((input || '').trim() && !isLoading) {
         handleSubmit(e);
       }
     }
@@ -235,7 +235,7 @@ export default function ChatPanel({
           <div className="flex-1 relative">
             <textarea
               ref={inputRef}
-              value={input}
+              value={input || ''}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="Ask AI Assistant..."
@@ -261,7 +261,7 @@ export default function ChatPanel({
             /* Send Button */
             <button
               type="submit"
-              disabled={!input.trim()}
+              disabled={!(input || '').trim()}
               className="flex-shrink-0 h-11 w-11 flex items-center justify-center bg-primary text-white rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               aria-label="Send message"
             >

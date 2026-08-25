@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import useTodos from "../../hooks/useTodos";
+import useTaskChat from "../../hooks/useTaskChat";
+import ChatPanel from "../../components/ChatPanel";
 
 // ── Sidebar nav items ────────────────────────────────────────────────────────
 const NAV_ITEMS = [
@@ -148,6 +150,10 @@ export default function AppPage() {
   const [todos, setTodos] = useTodos();
   const [filter, setFilter] = useState("all");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+
+  // Initialize AI chat hook with the live list of todos
+  const chatProps = useTaskChat(todos);
 
   // Handlers
   const handleAdd = (text) => {
@@ -226,6 +232,16 @@ export default function AppPage() {
               </button>
             </li>
           ))}
+          {/* AI Chat trigger button */}
+          <li>
+            <button
+              onClick={() => setChatOpen(true)}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg font-sans font-medium text-sm transition-all duration-200 text-tertiary hover:bg-surface-variant/50 cursor-pointer"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: "18px", fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+              AI Chat
+            </button>
+          </li>
         </ul>
 
         {/* Bottom links */}
@@ -273,6 +289,16 @@ export default function AppPage() {
                   </button>
                 </li>
               ))}
+              {/* Mobile drawer AI Chat button */}
+              <li>
+                <button
+                  onClick={() => { setChatOpen(true); setSidebarOpen(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg font-sans font-medium text-sm transition-all text-tertiary hover:bg-surface-variant/50 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px", fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+                  AI Chat
+                </button>
+              </li>
             </ul>
           </div>
           <div className="flex-1 bg-black/40 backdrop-blur-sm" />
@@ -381,12 +407,32 @@ export default function AppPage() {
           const input = document.getElementById("task-input");
           if (input) input.focus();
         }}
-        className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:opacity-90 hover:scale-105 active:scale-95 transition-all z-50"
+        className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:opacity-90 hover:scale-105 active:scale-95 transition-all z-50 cursor-pointer"
         style={{ boxShadow: "0 4px 24px rgba(59,130,246,0.45)" }}
         aria-label="Add task"
       >
         <span className="material-symbols-outlined" style={{ fontSize: "28px" }}>add</span>
       </button>
+
+      {/* ── Mobile AI FAB ── */}
+      <button
+        onClick={() => {
+          setSidebarOpen(false);
+          setChatOpen(true);
+        }}
+        className="md:hidden fixed bottom-24 right-6 w-14 h-14 bg-tertiary text-black rounded-full shadow-lg flex items-center justify-center hover:opacity-90 hover:scale-105 active:scale-95 transition-all z-40 cursor-pointer"
+        style={{ boxShadow: "0 4px 24px rgba(255,183,134,0.45)" }}
+        aria-label="Open AI Assistant"
+      >
+        <span className="material-symbols-outlined" style={{ fontSize: "28px", fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+      </button>
+
+      {/* ── AI Chat Assistant Panel ── */}
+      <ChatPanel
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        {...chatProps}
+      />
     </div>
   );
 }
