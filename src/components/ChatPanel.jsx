@@ -212,9 +212,13 @@ export default function ChatPanel({
   const inputRef = useRef(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
-  // Focus input when the panel is opened
+  const lastActiveElementRef = useRef(null);
+  const [announcement, setAnnouncement] = useState('');
+
+  // Focus management (focus trap restore + initial focus)
   useEffect(() => {
     if (open) {
+      lastActiveElementRef.current = document.activeElement;
       // Small timeout to allow slide-in animation to finish
       const timer = setTimeout(() => {
         if (inputRef.current) {
@@ -222,7 +226,46 @@ export default function ChatPanel({
         }
       }, 300);
       return () => clearTimeout(timer);
+    } else {
+      if (lastActiveElementRef.current) {
+        lastActiveElementRef.current.focus();
+      }
     }
+  }, [open]);
+
+  // Keyboard navigation focus trap
+  useEffect(() => {
+    if (!open) return;
+
+    const handleTabKey = (e) => {
+      if (e.key !== 'Tab') return;
+      const container = scrollContainerRef.current?.parentElement;
+      if (!container) return;
+
+      const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+      const focusableElements = Array.from(container.querySelectorAll(focusableSelectors))
+        .filter(el => !el.disabled && el.offsetParent !== null);
+
+      if (focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          lastElement.focus();
+          e.preventDefault();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          firstElement.focus();
+          e.preventDefault();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleTabKey);
+    return () => window.removeEventListener('keydown', handleTabKey);
   }, [open]);
 
   // Handle Escape key to close panel
@@ -235,6 +278,30 @@ export default function ChatPanel({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open, onClose]);
+
+  // Determine if AI is thinking (request sent, but first token not streamed yet)
+  const isThinking = isLoading && messages.length > 0 && messages[messages.length - 1].role === 'user';
+
+  // Live region announcements
+  useEffect(() => {
+    if (isThinking) {
+      setAnnouncement('AI is thinking...');
+    }
+  }, [isThinking]);
+
+  useEffect(() => {
+    if (error) {
+      setAnnouncement(`Connection error: ${getErrorMessage(error)}`);
+    }
+  }, [error]);
+
+  const wasLoadingRef = useRef(false);
+  useEffect(() => {
+    if (wasLoadingRef.current && !isLoading && !error) {
+      setAnnouncement('AI response complete.');
+    }
+    wasLoadingRef.current = isLoading;
+  }, [isLoading, error]);
 
   // Scroll logic for robust auto-scroll during token stream
   const scrollToBottom = () => {
@@ -291,8 +358,7 @@ export default function ChatPanel({
     }
   };
 
-  // Determine if AI is thinking (request sent, but first token not streamed yet)
-  const isThinking = isLoading && messages.length > 0 && messages[messages.length - 1].role === 'user';
+
 
   return (
     <div
@@ -301,22 +367,27 @@ export default function ChatPanel({
       }`}
       aria-modal="true"
       role="dialog"
-      aria-label="TaskFlow AI Assistant"
+      aria-labelledby="chat-title"
     >
+      {/* Live region for screen-reader announcements */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </div>
+
       {/* Header */}
       <header className="flex h-16 items-center justify-between border-b border-white/10 px-6">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-tertiary select-none" style={{ fontSize: '20px' }}>
+          <span className="material-symbols-outlined text-tertiary select-none" style={{ fontSize: '20px' }} aria-hidden="true">
             auto_awesome
           </span>
-          <h2 className="font-sans font-bold text-on-surface text-base">AI Assistant</h2>
+          <h2 id="chat-title" className="font-sans font-bold text-on-surface text-base">AI Assistant</h2>
         </div>
         <button
           onClick={onClose}
-          className="flex h-8 w-8 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/10 hover:text-on-surface focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+          className="flex h-8 w-8 items-center justify-center rounded-full text-on-surface-variant hover:bg-white/10 hover:text-on-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none transition-all"
           aria-label="Close AI chat"
         >
-          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '18px' }} aria-hidden="true">
             close
           </span>
         </button>
@@ -332,7 +403,7 @@ export default function ChatPanel({
           /* Empty State */
           <div className="flex h-full flex-col justify-center text-center space-y-6 py-8">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-white/5 bg-white/5 text-tertiary">
-              <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+              <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">
                 auto_awesome
               </span>
             </div>
@@ -348,7 +419,7 @@ export default function ChatPanel({
                 <button
                   key={prompt}
                   onClick={() => handlePromptClick(prompt)}
-                  className="w-full text-left font-sans text-xs text-on-surface-variant bg-white/[0.03] hover:bg-white/[0.08] hover:text-on-surface border border-white/5 rounded-lg p-3 transition-all cursor-pointer leading-relaxed"
+                  className="w-full text-left font-sans text-xs text-on-surface-variant bg-white/[0.03] hover:bg-white/[0.08] hover:text-on-surface border border-white/5 rounded-lg p-3 transition-all cursor-pointer leading-relaxed focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                 >
                   {prompt}
                 </button>
@@ -378,34 +449,34 @@ export default function ChatPanel({
               );
             })}
 
-            {/* Thinking Indicator */}
-            {isThinking && (
-              <div className="flex flex-col items-start">
-                <div className="chat-bubble-ai px-4 py-3 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-tertiary typing-dot" style={{ animationDelay: '0s' }} />
-                  <span className="w-2 h-2 rounded-full bg-tertiary typing-dot" style={{ animationDelay: '0.2s' }} />
-                  <span className="w-2 h-2 rounded-full bg-tertiary typing-dot" style={{ animationDelay: '0.4s' }} />
-                </div>
-                <span className="text-[10px] text-on-surface-variant/40 font-mono mt-1 px-1.5">Thinking</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Error message banner */}
-        {error && (
-          <div className="flex flex-col items-start mt-2">
-            <div className="flex items-start gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200 w-full max-w-[95%]">
-              <span className="material-symbols-outlined text-red-400 select-none flex-shrink-0" style={{ fontSize: '18px' }}>
-                error
-              </span>
-              <div className="flex-1 leading-relaxed">
-                <p className="font-semibold text-red-300">Connection Error</p>
-                <p className="mt-0.5">{getErrorMessage(error)}</p>
-              </div>
-            </div>
-          </div>
-        )}
+             {/* Thinking Indicator */}
+             {isThinking && (
+               <div className="flex flex-col items-start" aria-live="assertive">
+                 <div className="chat-bubble-ai px-4 py-3 flex items-center gap-1.5">
+                   <span className="w-2 h-2 rounded-full bg-tertiary typing-dot" style={{ animationDelay: '0s' }} aria-hidden="true" />
+                   <span className="w-2 h-2 rounded-full bg-tertiary typing-dot" style={{ animationDelay: '0.2s' }} aria-hidden="true" />
+                   <span className="w-2 h-2 rounded-full bg-tertiary typing-dot" style={{ animationDelay: '0.4s' }} aria-hidden="true" />
+                 </div>
+                 <span className="text-[10px] text-on-surface-variant/40 font-mono mt-1 px-1.5">Thinking</span>
+               </div>
+             )}
+           </div>
+         )}
+ 
+         {/* Error message banner */}
+         {error && (
+           <div className="flex flex-col items-start mt-2" role="alert">
+             <div className="flex items-start gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200 w-full max-w-[95%]">
+               <span className="material-symbols-outlined text-red-400 select-none flex-shrink-0" style={{ fontSize: '18px' }} aria-hidden="true">
+                 error
+               </span>
+               <div className="flex-1 leading-relaxed">
+                 <p className="font-semibold text-red-300">Connection Error</p>
+                 <p className="mt-0.5">{getErrorMessage(error)}</p>
+               </div>
+             </div>
+           </div>
+         )}
       </div>
 
       {/* Jump to latest affordance */}
@@ -413,9 +484,9 @@ export default function ChatPanel({
         <div className="flex justify-center -mt-10 mb-2 z-10">
           <button
             onClick={scrollToBottom}
-            className="flex items-center gap-1.5 bg-primary/95 text-white font-sans text-xs px-3.5 py-1.5 rounded-full shadow-lg border border-primary/20 hover:opacity-90 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 bg-primary/95 text-white font-sans text-xs px-3.5 py-1.5 rounded-full shadow-lg border border-primary/20 hover:opacity-90 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '14px' }} aria-hidden="true">
               arrow_downward
             </span>
             Jump to latest
@@ -434,7 +505,7 @@ export default function ChatPanel({
               onKeyDown={handleKeyDown}
               placeholder="Ask AI Assistant..."
               rows={1}
-              className="w-full resize-none rounded-lg px-4 py-3 pr-4 font-sans text-sm text-on-surface placeholder-on-surface-variant/40 bg-white/[0.02] border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all styled-scrollbar max-h-24 min-h-[44px] flex items-center align-middle"
+              className="w-full resize-none rounded-lg px-4 py-3 pr-4 font-sans text-sm text-on-surface placeholder-on-surface-variant/40 bg-white/[0.02] border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none outline-none transition-all styled-scrollbar max-h-24 min-h-[44px] flex items-center align-middle"
               aria-label="Chat message"
             />
           </div>
@@ -444,10 +515,10 @@ export default function ChatPanel({
             <button
               type="button"
               onClick={stop}
-              className="flex-shrink-0 h-11 w-11 flex items-center justify-center bg-error/20 hover:bg-error/30 text-error border border-error/20 rounded-lg active:scale-95 transition-all cursor-pointer"
+              className="flex-shrink-0 h-11 w-11 flex items-center justify-center bg-error/20 hover:bg-error/30 text-error border border-error/20 rounded-lg active:scale-95 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-error/50 focus-visible:outline-none"
               aria-label="Stop generation"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '20px', fontVariationSettings: "'FILL' 1" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '20px', fontVariationSettings: "'FILL' 1" }} aria-hidden="true">
                 stop_circle
               </span>
             </button>
@@ -456,10 +527,10 @@ export default function ChatPanel({
             <button
               type="submit"
               disabled={!(input || '').trim()}
-              className="flex-shrink-0 h-11 w-11 flex items-center justify-center bg-primary text-white rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="flex-shrink-0 h-11 w-11 flex items-center justify-center bg-primary text-white rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none"
               aria-label="Send message"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }} aria-hidden="true">
                 arrow_upward
               </span>
             </button>

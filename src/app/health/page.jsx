@@ -24,7 +24,7 @@ async function fetchGitHub() {
 }
 
 // ── Sub-component: individual check card ──────────────────────────────────
-function CheckCard({ icon, title, status, detail, color }) {
+function CheckCard({ icon, title, status, detail }) {
   const colors = {
     ok:      { dot: "bg-emerald-400", border: "border-emerald-400/20", label: "OK",      labelColor: "text-emerald-400" },
     warn:    { dot: "bg-amber-400",   border: "border-amber-400/20",   label: "WARN",    labelColor: "text-amber-400"   },
@@ -39,13 +39,13 @@ function CheckCard({ icon, title, status, detail, color }) {
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <span className="material-symbols-outlined text-primary" style={{ fontSize: "24px" }}>
+          <span className="material-symbols-outlined text-primary" style={{ fontSize: "24px" }} aria-hidden="true">
             {icon}
           </span>
           <h3 className="font-sans font-semibold text-on-surface text-base">{title}</h3>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${c.dot}`} />
+          <span className={`w-2 h-2 rounded-full ${c.dot}`} aria-hidden="true" />
           <span className={`font-sans text-xs font-bold tracking-widest uppercase ${c.labelColor}`}>
             {c.label}
           </span>

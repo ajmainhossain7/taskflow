@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import useTodos from "../../hooks/useTodos";
 import useTaskChat from "../../hooks/useTaskChat";
@@ -17,7 +17,7 @@ const NAV_ITEMS = [
 function TaskCard({ todo, onToggle, onDelete }) {
   return (
     <div
-      className="group flex items-center gap-4 p-4 rounded-lg border border-white/10 bg-white/5 backdrop-blur-md hover:border-white/25 hover:bg-white/[0.08] transition-all duration-200 cursor-pointer"
+      className="group flex items-center gap-4 p-4 rounded-lg border border-white/10 bg-white/5 backdrop-blur-md hover:border-white/25 hover:bg-white/[0.08] transition-all duration-200"
       style={{ transform: "translateY(0)" }}
       onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-2px)")}
       onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
@@ -25,16 +25,16 @@ function TaskCard({ todo, onToggle, onDelete }) {
       {/* Checkbox */}
       <button
         onClick={() => onToggle(todo.id)}
-        className="flex-shrink-0 w-5 h-5 rounded-full border border-outline-variant/40 flex items-center justify-center transition-all group-hover:border-primary/50 focus:outline-none"
+        className="flex-shrink-0 w-5 h-5 rounded-full border border-outline-variant/40 flex items-center justify-center transition-all group-hover:border-primary/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 cursor-pointer"
         style={
           todo.completed
             ? { backgroundColor: "var(--color-primary)", borderColor: "var(--color-primary)" }
             : {}
         }
-        aria-label={todo.completed ? "Mark incomplete" : "Mark complete"}
+        aria-label={todo.completed ? `Mark "${todo.text}" as incomplete` : `Mark "${todo.text}" as complete`}
       >
         {todo.completed && (
-          <span className="material-symbols-outlined text-white" style={{ fontSize: "12px" }}>
+          <span className="material-symbols-outlined text-white" style={{ fontSize: "12px" }} aria-hidden="true">
             check
           </span>
         )}
@@ -57,10 +57,10 @@ function TaskCard({ todo, onToggle, onDelete }) {
       {/* Delete */}
       <button
         onClick={() => onDelete(todo.id)}
-        className="flex-shrink-0 opacity-0 group-hover:opacity-100 text-on-surface-variant hover:text-error transition-all focus:outline-none focus:opacity-100"
-        aria-label="Delete task"
+        className="flex-shrink-0 opacity-0 group-hover:opacity-100 text-on-surface-variant hover:text-error transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-error/50 focus:opacity-100 cursor-pointer"
+        aria-label={`Delete task "${todo.text}"`}
       >
-        <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+        <span className="material-symbols-outlined" style={{ fontSize: "18px" }} aria-hidden="true">
           delete
         </span>
       </button>
@@ -88,15 +88,16 @@ function AddTaskInput({ onAdd }) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Add a new task..."
-        className="flex-1 rounded-lg px-4 py-3 font-sans text-base text-on-surface placeholder-on-surface-variant/50 bg-white/[0.02] border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+        className="flex-1 rounded-lg px-4 py-3 font-sans text-base text-on-surface placeholder-on-surface-variant/50 bg-white/[0.02] border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none outline-none transition-all"
         aria-label="New task"
       />
       <button
         type="submit"
         disabled={!text.trim()}
-        className="flex-shrink-0 bg-primary text-white font-sans font-medium text-sm px-5 py-3 rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+        className="flex-shrink-0 bg-primary text-white font-sans font-medium text-sm px-5 py-3 rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+        aria-label="Add task"
       >
-        <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
+        <span className="material-symbols-outlined" style={{ fontSize: "20px" }} aria-hidden="true">
           add
         </span>
       </button>
@@ -116,7 +117,14 @@ function StatsBar({ total, active, completed, onClearCompleted }) {
         </span>
         <span className="font-sans text-xs font-semibold text-primary">{pct}%</span>
       </div>
-      <div className="h-1 w-full rounded-full bg-surface-container-highest overflow-hidden">
+      <div 
+        className="h-1 w-full rounded-full bg-surface-container-highest overflow-hidden"
+        role="progressbar"
+        aria-valuenow={pct}
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-label="Task completion progress"
+      >
         <div
           className="h-full rounded-full bg-primary transition-all duration-500"
           style={{ width: `${pct}%`, boxShadow: "0 0 8px rgba(59,130,246,0.5)" }}
@@ -125,17 +133,17 @@ function StatsBar({ total, active, completed, onClearCompleted }) {
       {/* Stats chips */}
       <div className="flex items-center gap-3 mt-3 flex-wrap">
         <div className="flex items-center gap-1.5 rounded-full px-3 py-1 border border-white/10 bg-white/5">
-          <span className="w-2 h-2 rounded-full bg-primary inline-block" />
+          <span className="w-2 h-2 rounded-full bg-primary inline-block" aria-hidden="true" />
           <span className="font-sans text-xs text-on-surface-variant">{active} Active</span>
         </div>
         <div className="flex items-center gap-1.5 rounded-full px-3 py-1 border border-white/10 bg-white/5">
-          <span className="w-2 h-2 rounded-full bg-on-surface-variant inline-block" />
+          <span className="w-2 h-2 rounded-full bg-on-surface-variant inline-block" aria-hidden="true" />
           <span className="font-sans text-xs text-on-surface-variant">{completed} Done</span>
         </div>
         {completed > 0 && (
           <button
             onClick={onClearCompleted}
-            className="ml-auto font-sans text-xs text-on-surface-variant hover:text-error transition-colors"
+            className="ml-auto font-sans text-xs text-on-surface-variant hover:text-error transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-error/50 rounded px-1 cursor-pointer"
           >
             Clear completed
           </button>
@@ -152,6 +160,75 @@ export default function AppPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+
+  const menuTriggerRef = useRef(null);
+  const drawerRef = useRef(null);
+
+  // Focus trap / restore for mobile drawer
+  const wasSidebarOpenRef = useRef(false);
+  useEffect(() => {
+    if (sidebarOpen) {
+      const timer = setTimeout(() => {
+        const focusable = drawerRef.current?.querySelectorAll('a, button');
+        if (focusable && focusable.length > 0) {
+          focusable[0].focus();
+        }
+      }, 100);
+      wasSidebarOpenRef.current = true;
+      return () => clearTimeout(timer);
+    } else {
+      if (wasSidebarOpenRef.current && menuTriggerRef.current) {
+        menuTriggerRef.current.focus();
+      }
+      wasSidebarOpenRef.current = false;
+    }
+  }, [sidebarOpen]);
+
+  // Handle Escape key to close mobile drawer
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [sidebarOpen]);
+
+  // Focus trap Tab wrap in mobile drawer
+  useEffect(() => {
+    if (!sidebarOpen) return;
+
+    const handleTabKey = (e) => {
+      if (e.key !== 'Tab') return;
+      const container = drawerRef.current;
+      if (!container) return;
+
+      const focusableSelectors = 'a, button';
+      const focusableElements = Array.from(container.querySelectorAll(focusableSelectors))
+        .filter(el => !el.disabled && el.offsetParent !== null);
+
+      if (focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          lastElement.focus();
+          e.preventDefault();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          firstElement.focus();
+          e.preventDefault();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleTabKey);
+    return () => window.removeEventListener('keydown', handleTabKey);
+  }, [sidebarOpen]);
 
   // Initialize AI chat hook with the live list of todos
   const chatProps = useTaskChat(todos);
@@ -205,12 +282,13 @@ export default function AppPage() {
         {/* New Task button */}
         <button
           onClick={() => {
+            setSidebarOpen(false);
             const input = document.getElementById("task-input");
             if (input) input.focus();
           }}
-          className="bg-primary text-white font-sans font-medium text-sm rounded-lg py-2 px-4 flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-sm"
+          className="bg-primary text-white font-sans font-medium text-sm rounded-lg py-2 px-4 flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
         >
-          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add</span>
+          <span className="material-symbols-outlined" style={{ fontSize: "18px" }} aria-hidden="true">add</span>
           New Task
         </button>
 
@@ -220,13 +298,14 @@ export default function AppPage() {
             <li key={item.filter}>
               <button
                 onClick={() => setFilter(item.filter)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg font-sans font-medium text-sm transition-all duration-200 ${
+                aria-pressed={filter === item.filter}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg font-sans font-medium text-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none ${
                   filter === item.filter
                     ? "bg-primary/20 text-primary font-bold"
                     : "text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface"
                 }`}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>{item.icon}</span>
+                <span className="material-symbols-outlined" style={{ fontSize: "18px" }} aria-hidden="true">{item.icon}</span>
                 {item.label}
                 {item.filter === "active" && active > 0 && (
                   <span className="ml-auto bg-primary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
@@ -240,9 +319,9 @@ export default function AppPage() {
           <li>
             <button
               onClick={() => setChatOpen(true)}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg font-sans font-medium text-sm transition-all duration-200 text-tertiary hover:bg-surface-variant/50 cursor-pointer"
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg font-sans font-medium text-sm transition-all duration-200 text-tertiary hover:bg-surface-variant/50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-tertiary/50 focus-visible:outline-none"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: "18px", fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+              <span className="material-symbols-outlined" style={{ fontSize: "18px", fontVariationSettings: "'FILL' 1" }} aria-hidden="true">auto_awesome</span>
               AI Chat
             </button>
           </li>
@@ -252,16 +331,30 @@ export default function AppPage() {
         <div className="mt-auto flex flex-col gap-1 pt-4 border-t border-outline-variant/10">
           <Link
             href="/"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg font-sans text-sm text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface transition-all"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg font-sans text-sm text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>home</span>
+            <span className="material-symbols-outlined" style={{ fontSize: "18px" }} aria-hidden="true">home</span>
             Home
           </Link>
           <Link
-            href="/health"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg font-sans text-sm text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface transition-all"
+            href="/about"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg font-sans text-sm text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>monitor_heart</span>
+            <span className="material-symbols-outlined" style={{ fontSize: "18px" }} aria-hidden="true">info</span>
+            About
+          </Link>
+          <Link
+            href="/contact"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg font-sans text-sm text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "18px" }} aria-hidden="true">mail</span>
+            Contact
+          </Link>
+          <Link
+            href="/health"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg font-sans text-sm text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "18px" }} aria-hidden="true">monitor_heart</span>
             Health Check
           </Link>
         </div>
@@ -273,8 +366,19 @@ export default function AppPage() {
           className="md:hidden fixed inset-0 z-50 flex"
           onClick={() => setSidebarOpen(false)}
         >
-          <div className="w-64 h-full bg-surface-container-lowest border-r border-outline-variant/10 flex flex-col gap-4 p-6 z-60" onClick={(e) => e.stopPropagation()}>
-            <Link href="/" className="font-sans font-bold text-2xl text-primary mb-2 block" onClick={() => setSidebarOpen(false)}>
+          <div 
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation drawer"
+            className="w-64 h-full bg-surface-container-lowest border-r border-outline-variant/10 flex flex-col gap-4 p-6 z-60" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Link 
+              href="/" 
+              className="font-sans font-bold text-2xl text-primary mb-2 block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none" 
+              onClick={() => setSidebarOpen(false)}
+            >
               TaskFlow
             </Link>
             <ul className="flex flex-col gap-1">
@@ -282,13 +386,14 @@ export default function AppPage() {
                 <li key={item.filter}>
                   <button
                     onClick={() => { setFilter(item.filter); setSidebarOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg font-sans font-medium text-sm transition-all ${
+                    aria-pressed={filter === item.filter}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg font-sans font-medium text-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none ${
                       filter === item.filter
                         ? "bg-primary/20 text-primary font-bold"
                         : "text-on-surface-variant hover:bg-surface-variant/50"
                     }`}
                   >
-                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>{item.icon}</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }} aria-hidden="true">{item.icon}</span>
                     {item.label}
                   </button>
                 </li>
@@ -297,15 +402,15 @@ export default function AppPage() {
               <li>
                 <button
                   onClick={() => { setChatOpen(true); setSidebarOpen(false); }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg font-sans font-medium text-sm transition-all text-tertiary hover:bg-surface-variant/50 cursor-pointer"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg font-sans font-medium text-sm transition-all text-tertiary hover:bg-surface-variant/50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-tertiary/50 focus-visible:outline-none"
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: "18px", fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px", fontVariationSettings: "'FILL' 1" }} aria-hidden="true">auto_awesome</span>
                   AI Chat
                 </button>
               </li>
             </ul>
           </div>
-          <div className="flex-1 bg-black/40 backdrop-blur-sm" />
+          <div className="flex-1 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
         </div>
       )}
 
@@ -314,10 +419,13 @@ export default function AppPage() {
         {/* Top header */}
         <header className="bg-surface/80 backdrop-blur-md border-b border-outline-variant/10 flex items-center justify-between px-6 h-16 sticky top-0 z-30">
           <button
-            className="md:hidden text-on-surface-variant hover:text-primary transition-colors"
+            ref={menuTriggerRef}
+            className="md:hidden text-on-surface-variant hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded p-1"
             onClick={() => setSidebarOpen(true)}
+            aria-label="Open navigation menu"
+            aria-expanded={sidebarOpen}
           >
-            <span className="material-symbols-outlined">menu</span>
+            <span className="material-symbols-outlined" aria-hidden="true">menu</span>
           </button>
           <div className="flex-1 flex justify-end">
             <div className="relative w-full max-w-[180px] sm:max-w-xs">
@@ -363,12 +471,13 @@ export default function AppPage() {
           )}
 
           {/* Filter tabs (mobile) */}
-          <div className="md:hidden flex gap-2 mb-4 overflow-x-auto pb-1">
+          <div className="md:hidden flex gap-2 mb-4 overflow-x-auto pb-1" role="tablist" aria-label="Task filters">
             {NAV_ITEMS.map((item) => (
               <button
                 key={item.filter}
                 onClick={() => setFilter(item.filter)}
-                className={`flex-shrink-0 px-4 py-1.5 rounded-full font-sans text-xs font-semibold transition-all ${
+                aria-pressed={filter === item.filter}
+                className={`flex-shrink-0 px-4 py-1.5 rounded-full font-sans text-xs font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                   filter === item.filter
                     ? "bg-primary text-white"
                     : "border border-white/10 bg-white/5 text-on-surface-variant hover:bg-white/10"
@@ -417,11 +526,11 @@ export default function AppPage() {
           const input = document.getElementById("task-input");
           if (input) input.focus();
         }}
-        className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:opacity-90 hover:scale-105 active:scale-95 transition-all z-50 cursor-pointer"
+        className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:opacity-90 hover:scale-105 active:scale-95 transition-all z-50 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
         style={{ boxShadow: "0 4px 24px rgba(59,130,246,0.45)" }}
-        aria-label="Add task"
+        aria-label="Add task floating button"
       >
-        <span className="material-symbols-outlined" style={{ fontSize: "28px" }}>add</span>
+        <span className="material-symbols-outlined" style={{ fontSize: "28px" }} aria-hidden="true">add</span>
       </button>
 
       {/* ── Mobile AI FAB ── */}
@@ -430,11 +539,11 @@ export default function AppPage() {
           setSidebarOpen(false);
           setChatOpen(true);
         }}
-        className="md:hidden fixed bottom-24 right-6 w-14 h-14 bg-tertiary text-black rounded-full shadow-lg flex items-center justify-center hover:opacity-90 hover:scale-105 active:scale-95 transition-all z-40 cursor-pointer"
+        className="md:hidden fixed bottom-24 right-6 w-14 h-14 bg-tertiary text-black rounded-full shadow-lg flex items-center justify-center hover:opacity-90 hover:scale-105 active:scale-95 transition-all z-40 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-tertiary/50"
         style={{ boxShadow: "0 4px 24px rgba(255,183,134,0.45)" }}
         aria-label="Open AI Assistant"
       >
-        <span className="material-symbols-outlined" style={{ fontSize: "28px", fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+        <span className="material-symbols-outlined" style={{ fontSize: "28px", fontVariationSettings: "'FILL' 1" }} aria-hidden="true">auto_awesome</span>
       </button>
 
       {/* ── AI Chat Assistant Panel ── */}

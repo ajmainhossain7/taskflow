@@ -105,11 +105,11 @@ export default function ContactPage() {
               </button>
             </div>
           ) : (
-            <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+            <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
               <div className="flex flex-col md:flex-row gap-4 w-full">
                 <div className="flex flex-col gap-1 w-full">
                   <label className="font-sans text-xs font-semibold text-on-surface-variant tracking-widest uppercase" htmlFor="name">
-                    Name
+                    Name <span className="text-error" aria-hidden="true">*</span>
                   </label>
                   <input
                     id="name"
@@ -118,13 +118,16 @@ export default function ContactPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     disabled={submitStatus === "loading"}
-                    className="rounded-lg px-4 py-3 font-sans text-base text-on-surface placeholder-outline bg-white/[0.02] border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                    aria-required="true"
+                    aria-invalid={errors.name ? "true" : "false"}
+                    aria-describedby={errors.name ? "name-error" : undefined}
+                    className="rounded-lg px-4 py-3 font-sans text-base text-on-surface placeholder-outline bg-white/[0.02] border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none outline-none transition-all"
                   />
-                  {errors.name && <span className="text-error text-xs mt-1">{errors.name}</span>}
+                  {errors.name && <span id="name-error" className="text-error text-xs mt-1" role="alert">{errors.name}</span>}
                 </div>
                 <div className="flex flex-col gap-1 w-full">
                   <label className="font-sans text-xs font-semibold text-on-surface-variant tracking-widest uppercase" htmlFor="email">
-                    Email
+                    Email <span className="text-error" aria-hidden="true">*</span>
                   </label>
                   <input
                     id="email"
@@ -133,9 +136,12 @@ export default function ContactPage() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     disabled={submitStatus === "loading"}
-                    className="rounded-lg px-4 py-3 font-sans text-base text-on-surface placeholder-outline bg-white/[0.02] border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                    aria-required="true"
+                    aria-invalid={errors.email ? "true" : "false"}
+                    aria-describedby={errors.email ? "email-error" : undefined}
+                    className="rounded-lg px-4 py-3 font-sans text-base text-on-surface placeholder-outline bg-white/[0.02] border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none outline-none transition-all"
                   />
-                  {errors.email && <span className="text-error text-xs mt-1">{errors.email}</span>}
+                  {errors.email && <span id="email-error" className="text-error text-xs mt-1" role="alert">{errors.email}</span>}
                 </div>
               </div>
               <div className="flex flex-col gap-1 w-full">
@@ -147,7 +153,7 @@ export default function ContactPage() {
                   value={formData.subject}
                   onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                   disabled={submitStatus === "loading"}
-                  className="rounded-lg px-4 py-3 font-sans text-base text-on-surface bg-surface-container border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all appearance-none"
+                  className="rounded-lg px-4 py-3 font-sans text-base text-on-surface bg-surface-container border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none outline-none transition-all appearance-none"
                 >
                   <option value="support">Technical Support</option>
                   <option value="sales">Sales Inquiry</option>
@@ -157,7 +163,7 @@ export default function ContactPage() {
               </div>
               <div className="flex flex-col gap-1 w-full">
                 <label className="font-sans text-xs font-semibold text-on-surface-variant tracking-widest uppercase" htmlFor="message">
-                  Message
+                  Message <span className="text-error" aria-hidden="true">*</span>
                 </label>
                 <textarea
                   id="message"
@@ -166,14 +172,17 @@ export default function ContactPage() {
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   disabled={submitStatus === "loading"}
-                  className="rounded-lg px-4 py-3 font-sans text-base text-on-surface placeholder-outline bg-white/[0.02] border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
+                  aria-required="true"
+                  aria-invalid={errors.message ? "true" : "false"}
+                  aria-describedby={errors.message ? "message-error" : undefined}
+                  className="rounded-lg px-4 py-3 font-sans text-base text-on-surface placeholder-outline bg-white/[0.02] border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none outline-none transition-all resize-none"
                 />
-                {errors.message && <span className="text-error text-xs mt-1">{errors.message}</span>}
+                {errors.message && <span id="message-error" className="text-error text-xs mt-1" role="alert">{errors.message}</span>}
               </div>
               <button
                 type="submit"
                 disabled={submitStatus === "loading"}
-                className="mt-2 bg-primary text-white font-sans font-medium text-sm py-3 px-6 rounded-lg hover:opacity-90 active:scale-95 transition-all self-start disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="mt-2 bg-primary text-white font-sans font-medium text-sm py-3 px-6 rounded-lg hover:opacity-90 active:scale-95 transition-all self-start disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
               >
                 {submitStatus === "loading" ? "Sending..." : "Send Message"}
               </button>

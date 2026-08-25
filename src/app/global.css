@@ -181,3 +181,10 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .typing-dot {
+    animation: none !important;
+    opacity: 0.6;
+  }
+}
+
