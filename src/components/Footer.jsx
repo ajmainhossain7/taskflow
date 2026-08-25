@@ -22,7 +22,7 @@ export default function Footer() {
           </Link>
         </div>
         <div className="font-sans text-label-sm text-on-surface-variant">
-          © 2024 TaskFlow Productivity Suite. All rights reserved.
+          © 2026 TaskFlow Productivity Suite. All rights reserved.
         </div>
       </div>
     </footer>

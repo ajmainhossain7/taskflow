@@ -14,6 +14,189 @@ const SUGGESTED_PROMPTS = [
   'Give me a strategy to clear my active checklist.',
 ];
 
+const getErrorMessage = (error) => {
+  if (!error) return null;
+  const msg = (error.message || String(error)).toLowerCase();
+  
+  if (msg.includes('credit') || msg.includes('balance') || msg.includes('billing') || msg.includes('funds')) {
+    return 'The AI Assistant credit balance is exhausted. Please go to Plans & Billing on the Anthropic Console to add credits.';
+  }
+  if (msg.includes('api key') || msg.includes('invalid key') || msg.includes('unauthorized') || msg.includes('api_key') || msg.includes('401')) {
+    return 'Invalid API key configuration. Please check your server-side environment variables.';
+  }
+  if (msg.includes('overloaded') || msg.includes('rate limit') || msg.includes('429') || msg.includes('too many requests') || msg.includes('busy')) {
+    return 'The AI service is currently rate limited or overloaded. Please wait a moment and try again.';
+  }
+  if (msg.includes('fetch failed') || msg.includes('network') || msg.includes('offline') || msg.includes('failed to fetch')) {
+    return 'A network error occurred. Please check your internet connection and try again.';
+  }
+  return 'An error occurred during completion. Please check your settings or try again later.';
+};
+
+function parseInline(text, showCursor) {
+  if (!text) {
+    return showCursor ? <span key="cursor" className="inline-block w-1.5 h-4 ml-1 bg-tertiary animate-pulse select-none" style={{ verticalAlign: 'middle' }} /> : "";
+  }
+  
+  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g;
+  const parts = text.split(regex);
+  
+  const nodes = parts.map((part, index) => {
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return <code key={index} className="bg-white/10 px-1.5 py-0.5 rounded font-mono text-xs">{part.slice(1, -1)}</code>;
+    }
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={index} className="font-bold">{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return <em key={index} className="italic">{part.slice(1, -1)}</em>;
+    }
+    return part;
+  });
+  
+  if (showCursor) {
+    nodes.push(<span key="cursor" className="inline-block w-1.5 h-4 ml-1 bg-tertiary animate-pulse select-none" style={{ verticalAlign: 'middle' }} />);
+  }
+  
+  return nodes;
+}
+
+function renderMarkdown(content, isStreaming) {
+  if (!content) return null;
+  
+  const lines = content.split('\n');
+  const elements = [];
+  
+  let inCodeBlock = false;
+  let codeBlockLines = [];
+  
+  let currentList = null; // { type: 'ul' | 'ol', items: [] }
+  
+  const flushList = (key) => {
+    if (currentList) {
+      const listKey = `${key}-list`;
+      if (currentList.type === 'ul') {
+        elements.push(
+          <ul key={listKey} className="list-disc pl-5 my-2 space-y-1">
+            {currentList.items.map((item, i) => (
+              <li key={i}>
+                {parseInline(item.text, item.showCursor)}
+              </li>
+            ))}
+          </ul>
+        );
+      } else {
+        elements.push(
+          <ol key={listKey} className="list-decimal pl-5 my-2 space-y-1">
+            {currentList.items.map((item, i) => (
+              <li key={i}>
+                {parseInline(item.text, item.showCursor)}
+              </li>
+            ))}
+          </ol>
+        );
+      }
+      currentList = null;
+    }
+  };
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const key = `markdown-block-${i}`;
+    const isLastLine = i === lines.length - 1;
+    const showCursorAtEnd = isLastLine && isStreaming;
+    
+    // Code block detection
+    if (line.trim().startsWith('```')) {
+      if (inCodeBlock) {
+        // Close code block
+        elements.push(
+          <pre key={key} className="bg-black/40 border border-white/5 rounded-lg p-3 my-2 font-mono text-xs overflow-x-auto whitespace-pre">
+            <code>{codeBlockLines.join('\n')}</code>
+          </pre>
+        );
+        if (showCursorAtEnd) {
+          elements.push(<span key="cursor-code" className="inline-block w-1.5 h-4 ml-1 bg-tertiary animate-pulse select-none" style={{ verticalAlign: 'middle' }} />);
+        }
+        codeBlockLines = [];
+        inCodeBlock = false;
+      } else {
+        flushList(key + '-pre-list');
+        inCodeBlock = true;
+      }
+      continue;
+    }
+    
+    if (inCodeBlock) {
+      codeBlockLines.push(line);
+      if (showCursorAtEnd) {
+        // Append cursor inside code block if it is streaming
+        elements.push(
+          <pre key={key} className="bg-black/40 border border-white/5 rounded-lg p-3 my-2 font-mono text-xs overflow-x-auto whitespace-pre">
+            <code>{codeBlockLines.join('\n')}<span className="inline-block w-1.5 h-4 ml-1 bg-tertiary animate-pulse select-none" style={{ verticalAlign: 'middle' }} /></code>
+          </pre>
+        );
+        inCodeBlock = false; // Prevents duplicate code block rendering at flush
+      }
+      continue;
+    }
+    
+    // List item detection
+    const bulletMatch = line.match(/^[-*]\s+(.*)/);
+    const numberMatch = line.match(/^\d+\.\s+(.*)/);
+    
+    if (bulletMatch) {
+      if (!currentList || currentList.type !== 'ul') {
+        flushList(key + '-prev-list');
+        currentList = { type: 'ul', items: [] };
+      }
+      currentList.items.push({ text: bulletMatch[1], showCursor: showCursorAtEnd });
+      continue;
+    }
+    
+    if (numberMatch) {
+      if (!currentList || currentList.type !== 'ol') {
+        flushList(key + '-prev-list');
+        currentList = { type: 'ol', items: [] };
+      }
+      currentList.items.push({ text: numberMatch[1], showCursor: showCursorAtEnd });
+      continue;
+    }
+    
+    // Not a list item, flush any pending list
+    flushList(key + '-flush');
+    
+    // Headings
+    if (line.startsWith('### ')) {
+      elements.push(<h4 key={key} className="font-semibold text-sm mt-3 mb-1 text-on-surface">{parseInline(line.slice(4), showCursorAtEnd)}</h4>);
+    } else if (line.startsWith('## ')) {
+      elements.push(<h3 key={key} className="font-bold text-base mt-4 mb-1.5 text-on-surface">{parseInline(line.slice(3), showCursorAtEnd)}</h3>);
+    } else if (line.startsWith('# ')) {
+      elements.push(<h2 key={key} className="font-bold text-lg mt-5 mb-2 text-on-surface">{parseInline(line.slice(2), showCursorAtEnd)}</h2>);
+    } else if (line.trim() === '') {
+      elements.push(<div key={key} className="h-2" />);
+      if (showCursorAtEnd) {
+        elements.push(<span key="cursor-blank" className="inline-block w-1.5 h-4 ml-1 bg-tertiary animate-pulse select-none" style={{ verticalAlign: 'middle' }} />);
+      }
+    } else {
+      // Regular paragraph
+      elements.push(<p key={key} className="mb-2 leading-relaxed">{parseInline(line, showCursorAtEnd)}</p>);
+    }
+  }
+  
+  // Clean up remaining open elements at the end
+  flushList('final-list-flush');
+  if (inCodeBlock && codeBlockLines.length > 0) {
+    elements.push(
+      <pre key="final-code-flush" className="bg-black/40 border border-white/5 rounded-lg p-3 my-2 font-mono text-xs overflow-x-auto whitespace-pre">
+        <code>{codeBlockLines.join('\n')}</code>
+      </pre>
+    );
+  }
+  
+  return elements;
+}
+
 export default function ChatPanel({
   open,
   onClose,
@@ -23,6 +206,7 @@ export default function ChatPanel({
   handleSubmit,
   isLoading,
   stop,
+  error,
 }) {
   const scrollContainerRef = useRef(null);
   const inputRef = useRef(null);
@@ -180,16 +364,11 @@ export default function ChatPanel({
                 <div key={message.id} className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
                   {/* Bubble */}
                   <div
-                    className={`max-w-[85%] px-4 py-3 text-sm font-sans leading-relaxed break-words whitespace-pre-wrap ${
-                      isUser ? 'chat-bubble-user' : 'chat-bubble-ai'
+                    className={`max-w-[85%] px-4 py-3 text-sm font-sans leading-relaxed break-words ${
+                      isUser ? 'chat-bubble-user whitespace-pre-wrap' : 'chat-bubble-ai'
                     }`}
                   >
-                    {message.content}
-                    
-                    {/* Render blinking cursor on AI message during active streaming */}
-                    {!isUser && isLoading && message === messages[messages.length - 1] && (
-                      <span className="inline-block w-1.5 h-4 ml-1 bg-tertiary animate-pulse select-none" style={{ verticalAlign: 'middle' }} />
-                    )}
+                    {isUser ? message.content : renderMarkdown(message.content, isLoading && message === messages[messages.length - 1])}
                   </div>
                   {/* Timestamp/Role hint */}
                   <span className="text-[10px] text-on-surface-variant/40 font-mono mt-1 px-1.5">
@@ -210,6 +389,21 @@ export default function ChatPanel({
                 <span className="text-[10px] text-on-surface-variant/40 font-mono mt-1 px-1.5">Thinking</span>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Error message banner */}
+        {error && (
+          <div className="flex flex-col items-start mt-2">
+            <div className="flex items-start gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200 w-full max-w-[95%]">
+              <span className="material-symbols-outlined text-red-400 select-none flex-shrink-0" style={{ fontSize: '18px' }}>
+                error
+              </span>
+              <div className="flex-1 leading-relaxed">
+                <p className="font-semibold text-red-300">Connection Error</p>
+                <p className="mt-0.5">{getErrorMessage(error)}</p>
+              </div>
+            </div>
           </div>
         )}
       </div>

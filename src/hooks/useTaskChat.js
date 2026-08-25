@@ -66,5 +66,6 @@ export default function useTaskChat(todos) {
     handleInputChange,
     handleSubmit,
     isLoading,
+    error: chat.error,
   };
 }

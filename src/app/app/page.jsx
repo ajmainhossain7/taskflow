@@ -149,6 +149,7 @@ function StatsBar({ total, active, completed, onClearCompleted }) {
 export default function AppPage() {
   const [todos, setTodos] = useTodos();
   const [filter, setFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
 
@@ -182,9 +183,12 @@ export default function AppPage() {
   const active = total - completed;
 
   const filtered = todos.filter((t) => {
-    if (filter === "active") return !t.completed;
-    if (filter === "completed") return t.completed;
-    return true;
+    const matchesFilter =
+      filter === "all" ||
+      (filter === "active" && !t.completed) ||
+      (filter === "completed" && t.completed);
+    const matchesSearch = t.text.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesFilter && matchesSearch;
   });
 
   return (
@@ -316,14 +320,18 @@ export default function AppPage() {
             <span className="material-symbols-outlined">menu</span>
           </button>
           <div className="flex-1 flex justify-end">
-            <div className="relative w-full max-w-xs hidden sm:block">
+            <div className="relative w-full max-w-[180px] sm:max-w-xs">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" style={{ fontSize: "18px" }}>
                 search
               </span>
               <input
+                id="search-input"
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search tasks..."
                 className="w-full bg-surface-container-high border border-outline-variant/20 rounded-full py-1.5 pl-10 pr-4 font-sans text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-on-surface-variant/50"
+                aria-label="Search tasks"
               />
             </div>
           </div>
@@ -376,10 +384,12 @@ export default function AppPage() {
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <span className="material-symbols-outlined text-on-surface-variant mb-4" style={{ fontSize: "48px" }}>
-                  {filter === "completed" ? "check_circle" : "inbox"}
+                  {searchQuery ? "search_off" : (filter === "completed" ? "check_circle" : "inbox")}
                 </span>
                 <p className="font-sans text-on-surface-variant">
-                  {filter === "all"
+                  {searchQuery
+                    ? `No tasks found matching "${searchQuery}".`
+                    : filter === "all"
                     ? "No tasks yet. Add one above!"
                     : filter === "active"
                     ? "No active tasks. Great work!"

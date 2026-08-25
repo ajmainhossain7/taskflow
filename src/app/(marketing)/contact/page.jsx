@@ -19,6 +19,48 @@ export default function ContactPage() {
   ];
 
   const [openFaq, setOpenFaq] = useState(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "support",
+    message: "",
+  });
+  const [errors, setErrors] = useState({});
+  const [submitStatus, setSubmitStatus] = useState("idle"); // 'idle' | 'loading' | 'success'
+
+  const validateForm = () => {
+    const tempErrors = {};
+    if (!formData.name.trim()) tempErrors.name = "Name is required";
+    
+    if (!formData.email.trim()) {
+      tempErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      tempErrors.email = "Invalid email format";
+    }
+    
+    if (!formData.message.trim()) tempErrors.message = "Message is required";
+    
+    setErrors(tempErrors);
+    return Object.keys(tempErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+    
+    setSubmitStatus("loading");
+    
+    // Simulate frontend form submission
+    setTimeout(() => {
+      setSubmitStatus("success");
+      setFormData({
+        name: "",
+        email: "",
+        subject: "support",
+        message: "",
+      });
+    }, 1500);
+  };
 
   return (
     <div className="flex flex-col items-center justify-start py-8 px-6 max-w-[1200px] mx-auto w-full gap-12 mt-8 pb-20">
@@ -43,63 +85,100 @@ export default function ContactPage() {
           <h2 className="font-sans font-medium text-on-surface mb-4" style={{ fontSize: "24px" }}>
             Send a Message
           </h2>
-          <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
-            <div className="flex flex-col md:flex-row gap-4 w-full">
-              <div className="flex flex-col gap-1 w-full">
-                <label className="font-sans text-xs font-semibold text-on-surface-variant tracking-widest uppercase" htmlFor="name">
-                  Name
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  placeholder="Jane Doe"
-                  className="rounded-lg px-4 py-3 font-sans text-base text-on-surface placeholder-outline bg-white/[0.02] border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                />
+          {submitStatus === "success" ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <span className="material-symbols-outlined text-2xl font-bold">check</span>
               </div>
-              <div className="flex flex-col gap-1 w-full">
-                <label className="font-sans text-xs font-semibold text-on-surface-variant tracking-widest uppercase" htmlFor="email">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  placeholder="jane@example.com"
-                  className="rounded-lg px-4 py-3 font-sans text-base text-on-surface placeholder-outline bg-white/[0.02] border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                />
+              <div>
+                <h3 className="font-sans font-semibold text-on-surface text-lg">Message Sent</h3>
+                <p className="font-sans text-sm text-on-surface-variant mt-2 max-w-sm leading-relaxed">
+                  Thank you for reaching out! This is a frontend demo interaction. In a production environment, this message would be forwarded to our support team.
+                </p>
               </div>
-            </div>
-            <div className="flex flex-col gap-1 w-full">
-              <label className="font-sans text-xs font-semibold text-on-surface-variant tracking-widest uppercase" htmlFor="subject">
-                Subject
-              </label>
-              <select
-                id="subject"
-                className="rounded-lg px-4 py-3 font-sans text-base text-on-surface bg-surface-container border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all appearance-none"
+              <button
+                type="button"
+                onClick={() => setSubmitStatus("idle")}
+                className="bg-primary text-white font-sans font-medium text-sm py-2 px-5 rounded-lg hover:opacity-90 active:scale-95 transition-all mt-2 cursor-pointer"
               >
-                <option value="support">Technical Support</option>
-                <option value="sales">Sales Inquiry</option>
-                <option value="feedback">Product Feedback</option>
-                <option value="other">Other</option>
-              </select>
+                Send Another Message
+              </button>
             </div>
-            <div className="flex flex-col gap-1 w-full">
-              <label className="font-sans text-xs font-semibold text-on-surface-variant tracking-widest uppercase" htmlFor="message">
-                Message
-              </label>
-              <textarea
-                id="message"
-                rows={5}
-                placeholder="How can we help you today?"
-                className="rounded-lg px-4 py-3 font-sans text-base text-on-surface placeholder-outline bg-white/[0.02] border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
-              />
-            </div>
-            <button
-              type="button"
-              className="mt-2 bg-primary text-white font-sans font-medium text-sm py-3 px-6 rounded-lg hover:opacity-90 active:scale-95 transition-all self-start"
-            >
-              Send Message
-            </button>
-          </form>
+          ) : (
+            <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+              <div className="flex flex-col md:flex-row gap-4 w-full">
+                <div className="flex flex-col gap-1 w-full">
+                  <label className="font-sans text-xs font-semibold text-on-surface-variant tracking-widest uppercase" htmlFor="name">
+                    Name
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    placeholder="Jane Doe"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    disabled={submitStatus === "loading"}
+                    className="rounded-lg px-4 py-3 font-sans text-base text-on-surface placeholder-outline bg-white/[0.02] border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  />
+                  {errors.name && <span className="text-error text-xs mt-1">{errors.name}</span>}
+                </div>
+                <div className="flex flex-col gap-1 w-full">
+                  <label className="font-sans text-xs font-semibold text-on-surface-variant tracking-widest uppercase" htmlFor="email">
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder="jane@example.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    disabled={submitStatus === "loading"}
+                    className="rounded-lg px-4 py-3 font-sans text-base text-on-surface placeholder-outline bg-white/[0.02] border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  />
+                  {errors.email && <span className="text-error text-xs mt-1">{errors.email}</span>}
+                </div>
+              </div>
+              <div className="flex flex-col gap-1 w-full">
+                <label className="font-sans text-xs font-semibold text-on-surface-variant tracking-widest uppercase" htmlFor="subject">
+                  Subject
+                </label>
+                <select
+                  id="subject"
+                  value={formData.subject}
+                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  disabled={submitStatus === "loading"}
+                  className="rounded-lg px-4 py-3 font-sans text-base text-on-surface bg-surface-container border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all appearance-none"
+                >
+                  <option value="support">Technical Support</option>
+                  <option value="sales">Sales Inquiry</option>
+                  <option value="feedback">Product Feedback</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1 w-full">
+                <label className="font-sans text-xs font-semibold text-on-surface-variant tracking-widest uppercase" htmlFor="message">
+                  Message
+                </label>
+                <textarea
+                  id="message"
+                  rows={5}
+                  placeholder="How can we help you today?"
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  disabled={submitStatus === "loading"}
+                  className="rounded-lg px-4 py-3 font-sans text-base text-on-surface placeholder-outline bg-white/[0.02] border border-white/10 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
+                />
+                {errors.message && <span className="text-error text-xs mt-1">{errors.message}</span>}
+              </div>
+              <button
+                type="submit"
+                disabled={submitStatus === "loading"}
+                className="mt-2 bg-primary text-white font-sans font-medium text-sm py-3 px-6 rounded-lg hover:opacity-90 active:scale-95 transition-all self-start disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {submitStatus === "loading" ? "Sending..." : "Send Message"}
+              </button>
+            </form>
+          )}
         </div>
 
         {/* Contact Info */}

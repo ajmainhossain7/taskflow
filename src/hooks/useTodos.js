@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const STORAGE_KEY = 'todo-app:todos';
+const STORAGE_KEY = 'taskflow:todos';
 
 const useTodos = () => {
   const [todos, setTodos] = useState([]);
